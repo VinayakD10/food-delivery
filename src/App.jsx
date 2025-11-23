@@ -1,27 +1,82 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { CartProvider } from './context/CartContext';
+import { RestaurantProvider } from './context/RestaurantContext';
+import { Header } from './components/Header';
+import { Cart } from './components/Cart';
+import { HomePage } from './pages/HomePage';
+import { RestaurantPage } from './pages/RestaurantPage';
+import { CheckoutPage } from './pages/CheckoutPage';
+import { ConfirmationPage } from './pages/ConfirmationPage';
+
+function AppContent() {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [orderData, setOrderData] = useState(null);
+
+  const handleSelectRestaurant = (restaurant) => {
+    setSelectedRestaurant(restaurant);
+    setCurrentPage('restaurant');
+  };
+
+  const handleGoHome = () => {
+    setCurrentPage('home');
+    setSelectedRestaurant(null);
+    setOrderData(null);
+  };
+
+  const handleCheckout = () => {
+    setCurrentPage('checkout');
+    setIsCartOpen(false);
+  };
+
+  const handleConfirmOrder = (data) => {
+    setOrderData(data);
+    setCurrentPage('confirmation');
+  };
+
+  return (
+    <div className="min-h-screen bg-surface">
+      <Header onCartClick={() => setIsCartOpen(true)} />
+
+      {currentPage === 'home' && (
+        <HomePage onSelectRestaurant={handleSelectRestaurant} />
+      )}
+
+      {currentPage === 'restaurant' && selectedRestaurant && (
+        <RestaurantPage
+          restaurant={selectedRestaurant}
+          onBack={handleGoHome}
+        />
+      )}
+
+      {currentPage === 'checkout' && (
+        <CheckoutPage
+          onBack={() => setCurrentPage('home')}
+          onConfirm={handleConfirmOrder}
+        />
+      )}
+
+      {currentPage === 'confirmation' && orderData && (
+        <ConfirmationPage orderData={orderData} onHome={handleGoHome} />
+      )}
+
+      <Cart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onCheckout={handleCheckout}
+      />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-3xl font-display font-bold text-Swiggy-orange">
-            FOODxPREE
-          </h1>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h2 className="text-4xl font-display font-bold text-charcoal mb-4">
-            Welcome to FOODxPREE
-          </h2>
-          <p className="text-lg text-gray-600">
-            Your modern food delivery experience
-          </p>
-        </div>
-      </main>
-    </div>
+    <CartProvider>
+      <RestaurantProvider>
+        <AppContent />
+      </RestaurantProvider>
+    </CartProvider>
   );
 }
 
